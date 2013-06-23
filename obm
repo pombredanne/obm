@@ -73,7 +73,7 @@ if($_SERVER['argv'][0]){
         sleep(1);
         echo "...\n";
 
-        shell_exec('rm -rf obm && wget https://raw.github.com/obullo/obm/master/obm > /dev/null &');
+        shell_exec('rm -rf obm && wget https://raw.github.com/obullo/obm/master/obm && \n\33[0;32mecho "version update done."\33[0m\n && exit; > /dev/null &');
         
         echo "\033[0m";
         exit; //terminate the current script.
