@@ -31,7 +31,7 @@
 | $ php obm update
 |
 */
-$OBM_VERSION = '0.0';
+$OBM_VERSION = '0.1';
 if($_SERVER['argv'][0]){
     array_shift($_SERVER['argv']);
     if(ini_get('allow_url_fopen') !== "1"){
