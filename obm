@@ -60,15 +60,22 @@ if($_SERVER['argv'][0]){
     );
     $context  = stream_context_create($options);
     $json_res = file_get_contents($server_url, false, $context);
-    
     // print_r(json_decode($json_res, true));
-    
     $response = json_decode($json_res, true);
     
-    if(isset($response['version_update'])){ // If need to OBM version update. Run the update file.
-        echo "New OBM version ".$response['version_update']." available, upgrading to new version ...\n";
-        echo "....\n";
+    if(isset($response['version_update'])){ // If need to OBM version update. Run the update.sh.
+        echo "\33[0;36mNew OBM version ".$response['version_update']." available !\n";
+        echo "upgrading to new version ..\n";
+        sleep(1);
+        echo "please wait ..\n";
+        sleep(1);
+        echo "...\n";
+        sleep(2);
+        echo ".....\n";
+        sleep(2);
+        echo ".......\n";
         shell_exec('sh update.sh > /dev/null &');
+        echo "\033[0m";
         exit; //terminate the current script.
     }
     
