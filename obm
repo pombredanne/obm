@@ -31,7 +31,7 @@
 | $ php obm update
 |
 */
-$OBM_VERSION = '0.1';
+$OBM_VERSION = '0.0';
 if($_SERVER['argv'][0]){
     array_shift($_SERVER['argv']);
     if(ini_get('allow_url_fopen') !== "1"){
@@ -73,7 +73,13 @@ if($_SERVER['argv'][0]){
         sleep(1);
         echo "...\n";
 
-        shell_exec('rm -rf obm && wget https://raw.github.com/obullo/obm/master/obm && \n\33[0;32mecho "version update done."\33[0m\n && exit; > /dev/null &');
+        $wget_sh = "
+        wget https://raw.github.com/obullo/obm/master/obm;
+        echo \"\033[0m\";
+        echo \"\33[0m\33[0;32mdone.\33[0m\";
+        exit; > /dev/null &";
+        
+        shell_exec($wget_sh);
         
         echo "\033[0m";
         exit; //terminate the current script.
