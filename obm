@@ -1,3 +1,4 @@
+#!/usr/bin/php
 <?php
 /**
 |--------------------------------------------------------------------------
@@ -17,10 +18,10 @@
 */ 
 
 /**
-| Obm is an update manager and designed for Obullo.
-| 
-| Command line examples: 
-| 
+|--------------------------------------------------------------------------
+| Command line examples
+|--------------------------------------------------------------------------
+
 | $ cd /var/www/
 | $ wget http://obullo.com/obm
 | 
@@ -31,16 +32,31 @@
 | $ php obm update
 |
 */
+$_SERVER['HTTP_USER_AGENT']     = 'OBM ( Obullo Package Manager ) / OS : '.php_uname();
+$_SERVER['HTTP_ACCEPT_CHARSET'] = 'utf-8';
+
+ini_set('zend.ze1_compatibility_mode', 0);
+ini_set('memory_limit', '100000M');
+set_time_limit(0);
+
+if(getOSname() == 'Windows'){
+    error("Obullo is African origin and he loves to dance.");
+    die;
+}
 $OBM_VERSION = '0.1';
-if($_SERVER['argv'][0]){
+if(isset($_SERVER['argv'][0])){
     array_shift($_SERVER['argv']);
     if(ini_get('allow_url_fopen') !== "1"){
-        exit("\33[0;31mYou need to set allow_url_fopen to \"On\" in your php.ini file.\033[0m\n");
+        error("You need to set allow_url_fopen to \"On\" in your php.ini file.");
+        die;
     }
-    if(strtolower($_SERVER['argv'][0]) == 'install'){
-        
+    if(isset($_SERVER['argv'][1]) AND strtolower($_SERVER['argv'][1]) == 'install'){
+        if(is_dir($_SERVER['argv'][2])){
+            error("You have already a project named as ".$_SERVER['argv'][2].", please try different name.");
+            die;
+        }
     }
-    elseif(strtolower($_SERVER['argv'][0]) == 'update'){
+    elseif(isset($_SERVER['argv'][1]) AND strtolower($_SERVER['argv'][1]) == 'update'){
         // parse package json and send files to OBM SERVER
         
     }
@@ -60,7 +76,7 @@ if($_SERVER['argv'][0]){
     );
     $context  = stream_context_create($options);
     $json_res = file_get_contents($server_url, false, $context);
-    // print_r(json_decode($json_res, true));
+    //print_r(json_decode($json_res, true));
     $response = json_decode($json_res, true);
     
     if(isset($response['version_update'])){ // If need to OBM version update. Run the update.sh.
@@ -74,11 +90,9 @@ if($_SERVER['argv'][0]){
         echo "...\n";
 
         $wget_sh = "
-        wget https://raw.github.com/obullo/obm/master/obm;
+        sudo wget https://raw.github.com/obullo/obm/master/obm;
         echo \"\033[0m\";
-        echo \"\33[0m\33[0;32mdone.\33[0m\";
         exit; > /dev/null &";
-        
         shell_exec($wget_sh);
         
         echo "\033[0m";
@@ -87,22 +101,97 @@ if($_SERVER['argv'][0]){
     
     if(isset($response['errors'])){
         foreach($response['errors'] as $error){
-            echo $error."\n";
+            error($error);
         }
         die;
     }
     
-    print_r($response);
-    
-    
-    // print_r($xml);
-    
-    /*
-    if(file_exists($obm_packages.'/'.$package.'.zip'))
-    {
-    }
+    // print_r($response);
+    // PARSE JSON DATA
+    if(count($response) > 0){
+        // give chmod 777 permission to installed folder
+        // cd ..
+        // chmod -R 777 modulename
 
-    $shell = "cd /obullo_srv_cache";
-    $shell.= "wget -0 $package.zip 'https://github.com/obullo/task/archive/master.zip'";
-     */
+    } else {
+        error("Could not connect to the OBM Server, please try again.");
+        die;
+    }
+    
+    try {
+        // print_r($response);
+        foreach($response as $key => $package_json){
+            $package = json_decode(trim($package_json));
+            if($package == NULL){
+                error("The package $key could not parsed, probably there is a syntax error in package.json file.");
+            } 
+            /*****
+             *  npm http GET https://registry.npmjs.org/commander
+                npm http GET https://registry.npmjs.org/tinycolor
+                npm http GET https://registry.npmjs.org/options
+                npm http 200 https://registry.npmjs.org/uglify-js/-/uglify-js-1.2.5.tgz
+                npm http GET https://registry.npmjs.org/zeparser/0.0.5
+                npm http 200 https://registry.npmjs.org/bson/-/bson-0.1.8.tgz
+                npm http 200 https://registry.npmjs.org/xmlhttprequest/-/xmlhttprequest-1.4.2.tgz
+                npm http 200 https://registry.npmjs.org/mongodb
+                npm http 200 https://registry.npmjs.org/tinycolor
+                npm http 200 https://registry.npmjs.org/options
+                npm http 200 https://registry.npmjs.org/zeparser/0.0.5
+                npm http GET https://registry.npmjs.org/zeparser/-/zeparser-0.0.5.tgz
+                npm http 200 https://registry.npmjs.org/commander
+                npm http 200 https://registry.npmjs.org/zeparser/-/zeparser-0.0.5.tgz
+                ** --> npm http GET https://registry.npmjs.org/amanda/0.4.6
+                ** --> npm http 200 https://registry.npmjs.org/amanda/0.4.6
+                npm http GET https://registry.npmjs.org/amanda/-/amanda-0.4.6.tgz
+                npm http 200 https://registry.npmjs.org/amanda/-/amanda-0.4.6.tgz
+                amanda@0.4.6 node_modules/amanda
+             * 
+             */
+            if($package != NULL){
+                echo $package->name."\n";
+            }
+        }
+    } catch (Exception $e){
+        error($e->getMessage());
+        die;
+    }
+}
+
+//------------------ Obm functions ---------------------
+
+function error($error){
+    echo "\33[0;33m".$error."\033[0m\n";
+}
+function getOSname() { 
+    $userOS = php_uname('v');
+    $os_platform    =   "Unknown OS Platform";
+    $os_array       =   array(
+                            '/windows nt 6.2/i'     =>  'Windows',
+                            '/windows nt 6.1/i'     =>  'Windows',
+                            '/windows nt 6.0/i'     =>  'Windows',
+                            '/windows nt 5.2/i'     =>  'Windows',
+                            '/windows nt 5.1/i'     =>  'Windows',
+                            '/windows xp/i'         =>  'Windows',
+                            '/windows nt 5.0/i'     =>  'Windows',
+                            '/windows me/i'         =>  'Windows',
+                            '/win98/i'              =>  'Windows',
+                            '/win95/i'              =>  'Windows',
+                            '/win16/i'              =>  'Windows',
+                            '/macintosh|mac os x/i' =>  'Mac',
+                            '/mac_powerpc/i'        =>  'Mac',
+                            '/linux/i'              =>  'Linux',
+                            '/ubuntu/i'             =>  'Ubuntu',
+                            '/centos/i'             =>  'Centos',
+                            '/freebsd/i'            =>  'FreeBSD',
+                            '/debian/i'             =>  'Debian',
+                            '/fedora/i'             =>  'Fedora',
+                            '/redhat/i'             =>  'RedHat',
+                            '/ipad/i'               =>  'iPad',
+                        );
+    foreach ($os_array as $regex => $value) { 
+        if (preg_match($regex, $userOS)) {
+            $os_platform    =   $value;
+        }
+    }   
+    return $os_platform;
 }
