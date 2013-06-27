@@ -90,7 +90,11 @@ if(isset($_SERVER['argv'][0])){
         echo "...\n";
 
         $wget_sh = "
+        sudo rm -rf obm
+        sudo rm -rf /usr/bin/obm
         sudo wget https://raw.github.com/obullo/obm/master/obm;
+        sudo chmod 777 obm
+        sudo cp obm /usr/bin/obm
         echo \"\033[0m\";
         exit; > /dev/null &";
         shell_exec($wget_sh);
